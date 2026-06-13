@@ -783,9 +783,10 @@ export class ShellExecutionService {
           }
           onOutputEvent(event);
 
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           ShellExecutionService.cleanupLogStream(pid).then(() => {
             ShellExecutionService.activeChildProcesses.delete(pid);
+          }).catch((err) => {
+            debugLogger.error('Failed to cleanup log stream:', err);
           });
 
           ExecutionLifecycleService.completeWithResult(pid, resultPayload);
@@ -1219,7 +1220,9 @@ export class ShellExecutionService {
                 resolveChunk();
               }
             }),
-        );
+        ).catch((err) => {
+          debugLogger.error('PTY processing chain error:', err);
+        });
       };
 
       ptyProcess.onData((data: string) => {
@@ -1279,9 +1282,10 @@ export class ShellExecutionService {
               // Ignore errors during terminal cleanup
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             ShellExecutionService.cleanupLogStream(ptyPid).then(() => {
               ShellExecutionService.activePtys.delete(ptyPid);
+            }).catch((err) => {
+              debugLogger.error('Failed to cleanup PTY log stream:', err);
             });
 
             ExecutionLifecycleService.completeWithResult(ptyPid, {
@@ -1313,9 +1317,10 @@ export class ShellExecutionService {
             });
           });
 
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           Promise.race([processingComplete, abortFired]).then(() => {
             finalize();
+          }).catch((err) => {
+            debugLogger.error('Finalize processing error:', err);
           });
         },
       );
