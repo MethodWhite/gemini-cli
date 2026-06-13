@@ -581,7 +581,11 @@ ${aggregatedContent}
         chunks.push(value);
       }
     } finally {
-      reader.releaseLock();
+      try {
+        reader.releaseLock();
+      } catch {
+        // Stream may be in errored state, releaseLock throws TypeError
+      }
     }
     return Buffer.concat(chunks);
   }
