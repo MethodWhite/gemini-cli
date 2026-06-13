@@ -62,7 +62,12 @@ class DiscoveredToolInvocation extends BaseToolInvocation<
     abortSignal: _signal,
     updateOutput: _updateOutput,
   }: ExecuteOptions): Promise<ToolResult> {
-    const callCommand = this.config.getToolCallCommand()!;
+    const callCommand = this.config.getToolCallCommand();
+    if (!callCommand) {
+      throw new Error(
+        'Tool call command not configured. Set "toolCallCommand" in settings.',
+      );
+    }
     const args = [this.originalToolName];
 
     let finalCommand = callCommand;
