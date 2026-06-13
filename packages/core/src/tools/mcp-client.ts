@@ -317,12 +317,19 @@ export class McpClient implements McpProgressReporter {
     updateMCPServerStatus(this.serverName, status);
   }
 
-  private assertConnected(): void {
+  private assertConnected(): Client {
     if (this.status !== MCPServerStatus.CONNECTED) {
       throw new Error(
         `Client is not connected, must connect before interacting with the server. Current state is ${this.status}`,
       );
     }
+    const client = this.client;
+    if (!client) {
+      throw new Error(
+        'Client is not connected: client reference is null despite CONNECTED status',
+      );
+    }
+    return client;
   }
 
   private async discoverTools(
@@ -330,11 +337,11 @@ export class McpClient implements McpProgressReporter {
     messageBus: MessageBus,
     options?: { timeout?: number; signal?: AbortSignal },
   ): Promise<DiscoveredMCPTool[]> {
-    this.assertConnected();
+    const client = this.assertConnected();
     return discoverTools(
       this.serverName,
       this.serverConfig,
-      this.client!,
+      client,
       cliConfig,
       messageBus,
       {
@@ -349,18 +356,18 @@ export class McpClient implements McpProgressReporter {
   private async fetchPrompts(options?: {
     signal?: AbortSignal;
   }): Promise<DiscoveredMCPPrompt[]> {
-    this.assertConnected();
+    const client = this.assertConnected();
     return discoverPrompts(
       this.serverName,
-      this.client!,
+      client,
       this.cliConfig,
       options,
     );
   }
 
   private async discoverResources(): Promise<Resource[]> {
-    this.assertConnected();
-    return discoverResources(this.serverName, this.client!, this.cliConfig);
+    const client = this.assertConnected();
+    return discoverResources(this.serverName, client, this.cliConfig);
   }
 
   private updateResourceRegistry(
@@ -374,8 +381,8 @@ export class McpClient implements McpProgressReporter {
     uri: string,
     options?: { signal?: AbortSignal },
   ): Promise<ReadResourceResult> {
-    this.assertConnected();
-    return this.client!.request(
+    const client = this.assertConnected();
+    return client.request(
       {
         method: 'resources/read',
         params: { uri },
@@ -1257,8 +1264,9 @@ export async function connectAndDiscover(
     toolRegistry.sortTools();
   } catch (error) {
     if (mcpClient) {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      mcpClient.close();
+      mcpClient.close().catch((err) => {
+        debugLogger.error(`Failed to close MCP client: ${err}`);
+      });
     }
     cliConfig.emitMcpDiagnostic(
       'error',
