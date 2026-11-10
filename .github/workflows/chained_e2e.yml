@@ -356,7 +356,7 @@ jobs:
         with:
           name: 'eval-logs-${{ github.run_id }}-${{ github.run_attempt }}'
           path: 'evals/logs/api-reliability.jsonl'
-          retention-days: 7
+          retention-days: 14
 
   e2e:
     name: 'E2E'
