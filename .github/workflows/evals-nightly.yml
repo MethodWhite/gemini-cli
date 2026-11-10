@@ -97,7 +97,7 @@ jobs:
         with:
           name: 'eval-logs-${{ matrix.model }}-${{ matrix.run_attempt }}'
           path: 'evals/logs'
-          retention-days: 7
+          retention-days: 14
 
   aggregate-results:
     name: 'Aggregate Results'
