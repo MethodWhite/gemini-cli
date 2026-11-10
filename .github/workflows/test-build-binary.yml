@@ -160,4 +160,4 @@ jobs:
         with:
           name: 'gemini-cli-${{ matrix.platform_name }}'
           path: 'dist/${{ matrix.platform_name }}/'
-          retention-days: 5
+          retention-days: 14
